@@ -8,29 +8,62 @@ random.seed(42)
 n = 10000
 
 
-# 1. Generación de variables
+# 1. Edad
 edad = np.random.randint(18, 61, n)
-experiencia = np.random.randint(0, 31, n)
-antiguedad = np.minimum(experiencia, np.random.randint(0, 21, n))
 
-salario = np.random.randint(482, 4001, n)
-salario_base = np.random.randint(482, 2500, n)
-salario = salario_base + experiencia * 50
+# 2. Experiencia (dependiente de edad)
+edad_inicio_trabajo = np.random.normal(22, 3, n).astype(int)
+edad_inicio_trabajo = np.clip(edad_inicio_trabajo, 18, 30)
+
+experiencia = edad - edad_inicio_trabajo
+pausas = np.random.binomial(1, 0.3, n) * np.random.randint(0, 5, n)
+experiencia = experiencia - pausas
+experiencia = np.clip(experiencia, 0, None)
+
+# 3. Antigüedad (no puede superar experiencia)
+antiguedad = np.array([
+    np.random.randint(0, exp + 1) if exp > 0 else 0
+    for exp in experiencia
+])
+
+# 4. Salario (dependiente de experiencia)
+salario_base = np.random.randint(482, 2000, n)
+salario = salario_base + experiencia * np.random.randint(30, 80, n)
 salario = np.clip(salario, 482, 4000)
 
+# 5. Horas de trabajo
 horas_trabajo = np.random.randint(30, 61, n)
 
-satisfaccion = np.random.randint(1, 6, n)
+# 6. Promociones (dependiente de antigüedad)
+promociones = np.array([
+    np.random.randint(0, min(5, ant + 1))
+    for ant in antiguedad
+])
+
+# 7. Satisfacción (depende de condiciones laborales)
+satisfaccion = np.array([
+    np.clip(
+        np.random.randint(2, 5)
+        - (1 if horas_trabajo[i] > 50 else 0)
+        - (1 if salario[i] < 1000 else 0)
+        + (1 if promociones[i] > 1 else 0),
+        1, 5
+    )
+    for i in range(n)
+])
+
+# 8. Work-life balance
 work_life_balance = np.random.randint(1, 6, n)
 
-promociones = np.random.randint(0, 6, n)
+# 9. Distancia
 distancia = np.random.randint(0, 51, n)
 
+# 10. Departamento
 departamentos = ["IT", "RRHH", "Ventas", "Finanzas", "Producción", "Logística"]
 departamento = np.random.choice(departamentos, n)
 
+# 11. Tipo de contrato
 tipo_contrato = np.random.choice(["temporal", "fijo"], n, p=[0.3, 0.7])
-
 
 # 2. Función de probabilidad de renuncia
 def calcular_prob(i):
@@ -98,10 +131,17 @@ elif current_ratio > target_ratio:
     flip = np.random.choice(idx, size=int((current_ratio - target_ratio) * n), replace=False)
     renuncia[flip] = 0
 
-
 def generar_comentario(i):
-    # Comentarios según nivel de satisfacción
-    if satisfaccion[i] <= 2:  # Baja satisfacción
+    prob = np.random.rand()
+
+    # 70% sigue lógica real, 30% introduce ruido
+    if prob < 0.7:
+        nivel = satisfaccion[i]
+    else:
+        nivel = np.random.randint(1, 6)
+
+    # 🔴 BAJA SATISFACCIÓN (15+)
+    if nivel <= 2:
         opciones = [
             "Estoy muy insatisfecho con mi trabajo",
             "No me siento valorado en la empresa",
@@ -117,9 +157,16 @@ def generar_comentario(i):
             "Los recursos para trabajar son insuficientes",
             "El ambiente de oficina es tenso",
             "No hay oportunidades de crecimiento",
-            "Me siento sobrecargado y desmotivado"
+            "Me siento sobrecargado y desmotivado",
+            "No confío en la dirección de la empresa",
+            "Siento que mi trabajo no tiene impacto",
+            "El liderazgo es deficiente",
+            "No hay reconocimiento al esfuerzo",
+            "Me siento estancado profesionalmente"
         ]
-    elif satisfaccion[i] >= 4:  # Alta satisfacción
+
+    # 🟢 ALTA SATISFACCIÓN (15+)
+    elif nivel >= 4:
         opciones = [
             "Estoy contento con mi trabajo",
             "Me gusta el ambiente laboral",
@@ -135,9 +182,16 @@ def generar_comentario(i):
             "Tengo un equilibrio razonable entre trabajo y vida",
             "El liderazgo de mi equipo es excelente",
             "Me siento parte de un buen equipo",
-            "Estoy orgulloso de lo que hacemos"
+            "Estoy orgulloso de lo que hacemos",
+            "Siento estabilidad en mi trabajo",
+            "Mi desarrollo profesional es constante",
+            "La empresa valora a sus empleados",
+            "Estoy satisfecho con las condiciones laborales",
+            "Hay un buen ambiente de colaboración"
         ]
-    else:  # Media satisfacción
+
+    # 🟡 SATISFACCIÓN MEDIA (15+)
+    else:
         opciones = [
             "El trabajo es aceptable",
             "Hay cosas buenas y malas",
@@ -153,20 +207,27 @@ def generar_comentario(i):
             "El equilibrio entre trabajo y vida es justo",
             "Me esfuerzo por mejorar en mi puesto",
             "Siento que algunos procesos son confusos",
-            "Aprecio el apoyo de mis compañeros pero no siempre de mi jefe"
+            "Aprecio el apoyo de mis compañeros pero no siempre de mi jefe",
+            "El trabajo cumple con lo esperado",
+            "No es el mejor trabajo, pero tampoco el peor",
+            "Hay estabilidad pero falta innovación",
+            "La empresa tiene potencial de mejora",
+            "Cumplo mis funciones sin mayor inconveniente"
         ]
 
-    # Elegir comentario al azar
     comentario = random.choice(opciones)
 
-    # Agregar modificaciones según horas o salario
-    if horas_trabajo[i] > 50:
+    # 🔥 FACTORES ADICIONALES (ruido realista)
+    if horas_trabajo[i] > 50 and np.random.rand() < 0.5:
         comentario += " y me siento muy estresado por la carga laboral"
-    if salario[i] < 1000:
+
+    if salario[i] < 1000 and np.random.rand() < 0.5:
         comentario += " además considero que el salario es bajo"
 
-    return comentario
+    if promociones[i] == 0 and np.random.rand() < 0.3:
+        comentario += " y siento que no hay crecimiento profesional"
 
+    return comentario
 comentarios = [generar_comentario(i) for i in range(n)]
 
 
@@ -208,3 +269,7 @@ print(df.describe())
 
 print("\nConteo de clases:")
 print(df["renuncia"].value_counts())
+
+# Validaciones
+print("Errores experiencia > edad:", (experiencia > (edad - 18)).sum())
+print("Errores antigüedad > experiencia:", (antiguedad > experiencia).sum())
