@@ -1,47 +1,67 @@
 import os
-
-try:
-    from openai import OpenAI
-except ImportError:
-    OpenAI = None
+import anthropic
 
 
-class OpenAIRecommendationService:
+class ClaudeRecommendationService:
     def __init__(self):
-        api_key = os.getenv("OPENAI_API_KEY")
-        self.client = OpenAI(api_key=api_key) if OpenAI and api_key else None
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        self.client = anthropic.Anthropic(api_key=api_key) if api_key else None
 
-    def generate_recommendation(self, payload):
-        risk_level = payload.get("risk_level", "Bajo")
+    def generate_recommendation(self, employee_data, risk_score, risk_level):
+        """
+        Genera recomendaciones usando Claude.
+        """
+
         if not self.client:
-            return self._fallback(risk_level)
+            return self._fallback_recommendation(risk_level)
 
-        prompt = f"""
-Eres un asistente de RRHH experto en retención de talento.
-Genera una recomendación breve, accionable y personalizada en español.
-Máximo 4 líneas.
+        # Construir JSON del empleado (más limpio para el prompt)
+        empleado_json = {
+            "edad": employee_data.get("edad"),
+            "salario": employee_data.get("salario"),
+            "antiguedad_empresa": employee_data.get("antiguedad_empresa"),
+            "departamento": employee_data.get("departamento"),
+            "tipo_contrato": employee_data.get("tipo_contrato"),
+            "satisfaccion_laboral": employee_data.get("satisfaccion_laboral"),
+            "work_life_balance": employee_data.get("work_life_balance"),
+            "risk_score": round(float(risk_score), 2),
+            "risk_level": risk_level,
+            "comentarios_empleado": employee_data.get("comentarios_empleado", "")
+        }
+
+        mensaje = f"""
+Eres un experto en Recursos Humanos.
+
+Analiza este empleado y genera recomendaciones para reducir su riesgo de abandono laboral.
 
 Datos del empleado:
-- ID: {payload.get('employee_id', 'N/A')}
-- Risk score: {payload.get('risk_score', 0):.2f}
-- Nivel de riesgo: {risk_level}
-- Departamento: {payload.get('departamento', 'N/A')}
-- Tipo de contrato: {payload.get('tipo_contrato', 'N/A')}
-- Antigüedad empresa: {payload.get('antiguedad_empresa', 'N/A')}
-- Satisfacción laboral: {payload.get('satisfaccion_laboral', 'N/A')}
-- Work-life balance: {payload.get('work_life_balance', 'N/A')}
-- Comentario del empleado: \"{payload.get('comentarios_empleado', 'Sin comentario')}\"
-"""
-        try:
-            response = self.client.responses.create(model="gpt-5.4", input=prompt)
-            return response.output_text.strip()
-        except Exception:
-            return self._fallback(risk_level)
+{empleado_json}
 
-    def _fallback(self, risk_level):
-        rules = {
-            "Alto": "Intervenir de inmediato con RRHH, revisar carga laboral, salario y plan de retención.",
-            "Medio": "Hacer seguimiento con jefatura y revisar satisfacción, desarrollo y balance trabajo-vida.",
-            "Bajo": "Mantener monitoreo periódico y reforzar acciones de bienestar y reconocimiento."
+Reglas:
+- Máximo 3 recomendaciones
+- Concretas y accionables
+- Responde en español
+- No expliques, solo da recomendaciones
+"""
+
+        try:
+            response = self.client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=500,
+                messages=[
+                    {"role": "user", "content": mensaje}
+                ]
+            )
+
+            return response.content[0].text.strip()
+
+        except Exception:
+            return self._fallback_recommendation(risk_level)
+
+    def _fallback_recommendation(self, risk_level):
+        fallback = {
+            "Alto": "1. Reunión inmediata con RRHH\n2. Ajustar carga laboral\n3. Crear plan de retención",
+            "Medio": "1. Seguimiento con líder\n2. Evaluar satisfacción laboral\n3. Ajustes menores en condiciones",
+            "Bajo": "1. Mantener monitoreo\n2. Reforzar clima laboral\n3. Incentivar motivación"
         }
-        return rules.get(risk_level, "Sin recomendación disponible.")
+        return fallback.get(risk_level, "Sin recomendación disponible.")
