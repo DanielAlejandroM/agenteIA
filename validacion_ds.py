@@ -1,7 +1,9 @@
 import pandas as pd
+import os
 
 # cargar el dataset previamente guardado
-df = pd.read_csv("empleados.csv")
+ruta = os.path.join(os.path.dirname(__file__), "data", "empleados.csv")
+df = pd.read_csv(ruta, encoding="utf-8")
 
 # validación del dataset
 def validar_dataset(df):
@@ -25,7 +27,7 @@ def validar_dataset(df):
     for col, min_val, max_val in [
         ("edad", 18, 60), ("salario", 482, 4000), ("experiencia", 0, 30),
         ("antiguedad_empresa", 0, 20), ("horas_trabajo", 30, 60),
-        ("satisfaccion_laboral", 1, 5), ("work_life_balance", 1, 5),
+        ("satisfaccion_laboral", 1, 5), ("balance_trabajo_vida", 1, 5),
         ("promociones", 0, 5), ("distancia_trabajo", 0, 50)
     ]:
         if df[col].between(min_val, max_val).all():
