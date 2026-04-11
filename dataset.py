@@ -118,7 +118,7 @@ renuncia = np.random.binomial(1, probs)
 
 
 # 4. Ajustar distribución (~65/35)
-target_ratio = 0.35
+target_ratio = 0.50
 current_ratio = renuncia.mean()
 
 if current_ratio < target_ratio:
@@ -256,10 +256,6 @@ df.to_csv("empleados.csv", index=False)
 
 # 8. Resumen básico
 print(df.head())
-print("\nDistribución de renuncia:")
-print(df["renuncia"].value_counts(normalize=True))
-
-print(df.head())
 
 print("\nDistribución de renuncia:")
 print(df["renuncia"].value_counts(normalize=True))
@@ -271,5 +267,8 @@ print("\nConteo de clases:")
 print(df["renuncia"].value_counts())
 
 # Validaciones
+print("\nVALIDACIONES:")
 print("Errores experiencia > edad:", (experiencia > (edad - 18)).sum())
 print("Errores antigüedad > experiencia:", (antiguedad > experiencia).sum())
+print("Valores negativos experiencia:", (experiencia < 0).sum())
+print("Valores negativos antigüedad:", (antiguedad < 0).sum())
