@@ -59,7 +59,7 @@ work_life_balance = np.random.randint(1, 6, n)
 distancia = np.random.randint(0, 51, n)
 
 # 10. Departamento
-departamentos = ["IT", "RRHH", "Ventas", "Finanzas", "Producción", "Logística"]
+departamentos = ["ti", "rrhh", "ventas", "finanzas", "produccion", "logistica"]
 departamento = np.random.choice(departamentos, n)
 
 # 11. Tipo de contrato
@@ -117,7 +117,7 @@ renuncia = np.random.binomial(1, probs)
 # porque dos empleados con las mismas condiciones pueden tener distinto resultado
 
 
-# 4. Ajustar distribución (~65/35)
+# 4. Ajustar distribución (50/50)
 target_ratio = 0.50
 current_ratio = renuncia.mean()
 
@@ -140,79 +140,79 @@ def generar_comentario(i):
     else:
         nivel = np.random.randint(1, 6)
 
-    # 🔴 BAJA SATISFACCIÓN (15+)
+    # BAJA SATISFACCIÓN (15+)
     if nivel <= 2:
         opciones = [
-            "Estoy muy insatisfecho con mi trabajo",
-            "No me siento valorado en la empresa",
-            "El ambiente laboral es muy malo",
-            "Siento que mi esfuerzo no se reconoce",
-            "El trabajo es estresante y agotador",
-            "No tengo motivación para seguir aquí",
-            "La carga de trabajo es abrumadora",
-            "Siento que mis habilidades no se aprovechan",
-            "Hay falta de comunicación en el equipo",
-            "No recibo retroalimentación suficiente",
-            "Mi jefe no apoya mi desarrollo profesional",
-            "Los recursos para trabajar son insuficientes",
-            "El ambiente de oficina es tenso",
-            "No hay oportunidades de crecimiento",
-            "Me siento sobrecargado y desmotivado",
-            "No confío en la dirección de la empresa",
-            "Siento que mi trabajo no tiene impacto",
-            "El liderazgo es deficiente",
-            "No hay reconocimiento al esfuerzo",
-            "Me siento estancado profesionalmente"
+            "estoy muy insatisfecho con mi trabajo",
+            "no me siento valorado en la empresa",
+            "el ambiente laboral es muy malo",
+            "siento que mi esfuerzo no se reconoce",
+            "el trabajo es estresante y agotador",
+            "no tengo motivacion para seguir en este trabajo",
+            "la carga de trabajo es abrumadora",
+            "siento que mis habilidades no se aprovechan",
+            "hay falta de comunicacion en el equipo",
+            "no recibo retroalimentacion suficiente",
+            "mi jefe no apoya mi desarrollo profesional",
+            "los recursos para trabajar son insuficientes",
+            "el ambiente de oficina es tenso",
+            "no hay oportunidades de crecimiento",
+            "me siento sobrecargado y desmotivado",
+            "no confio en la direccion de la empresa",
+            "siento que mi trabajo no tiene impacto",
+            "el liderazgo es deficiente",
+            "no hay reconocimiento al esfuerzo",
+            "me siento estancado profesionalmente"
         ]
 
-    # 🟢 ALTA SATISFACCIÓN (15+)
+    # ALTA SATISFACCIÓN (15+)
     elif nivel >= 4:
         opciones = [
-            "Estoy contento con mi trabajo",
-            "Me gusta el ambiente laboral",
-            "Estoy satisfecho con mi equipo",
-            "Disfruto trabajar en esta empresa",
-            "Mi equipo y mi jefe me apoyan mucho",
-            "Estoy motivado y satisfecho con mis proyectos",
-            "Siento que crezco profesionalmente",
-            "Me siento reconocido por mis esfuerzos",
-            "La cultura de la empresa es positiva",
-            "Hay buenas oportunidades de aprendizaje",
-            "Trabajo en proyectos que me interesan",
-            "Tengo un equilibrio razonable entre trabajo y vida",
-            "El liderazgo de mi equipo es excelente",
-            "Me siento parte de un buen equipo",
-            "Estoy orgulloso de lo que hacemos",
-            "Siento estabilidad en mi trabajo",
-            "Mi desarrollo profesional es constante",
-            "La empresa valora a sus empleados",
-            "Estoy satisfecho con las condiciones laborales",
-            "Hay un buen ambiente de colaboración"
+            "estoy contento con mi trabajo",
+            "me gusta el ambiente laboral",
+            "estoy satisfecho con mi equipo",
+            "disfruto trabajar en esta empresa",
+            "mi equipo y mi jefe me apoyan mucho",
+            "estoy motivado y satisfecho con mis proyectos",
+            "siento que crezco profesionalmente",
+            "me siento reconocido por mis esfuerzos",
+            "la cultura de la empresa es positiva",
+            "hay buenas oportunidades de aprendizaje",
+            "trabajo en proyectos que me interesan",
+            "tengo un equilibrio razonable entre trabajo y vida",
+            "el liderazgo de mi equipo es excelente",
+            "me siento parte de un buen equipo",
+            "estoy orgulloso de lo que hacemos",
+            "siento estabilidad en mi trabajo",
+            "mi desarrollo profesional es constante",
+            "la empresa valora a sus empleados",
+            "estoy satisfecho con las condiciones laborales",
+            "hay un buen ambiente de colaboracion"
         ]
 
-    # 🟡 SATISFACCIÓN MEDIA (15+)
+    # SATISFACCIÓN MEDIA (15+)
     else:
         opciones = [
-            "El trabajo es aceptable",
-            "Hay cosas buenas y malas",
-            "Mi experiencia es promedio",
-            "Algunas tareas son interesantes, otras no tanto",
-            "El equipo es bueno, pero la gestión necesita mejorar",
-            "Estoy aprendiendo cosas nuevas, pero hay desafíos",
-            "A veces me siento motivado, a veces no",
-            "El ambiente es regular, podría mejorar",
-            "Siento que mi esfuerzo no siempre se reconoce",
-            "Tengo oportunidades limitadas para crecer",
-            "Hay tareas repetitivas que no disfruto",
-            "El equilibrio entre trabajo y vida es justo",
-            "Me esfuerzo por mejorar en mi puesto",
-            "Siento que algunos procesos son confusos",
-            "Aprecio el apoyo de mis compañeros pero no siempre de mi jefe",
-            "El trabajo cumple con lo esperado",
-            "No es el mejor trabajo, pero tampoco el peor",
-            "Hay estabilidad pero falta innovación",
-            "La empresa tiene potencial de mejora",
-            "Cumplo mis funciones sin mayor inconveniente"
+            "el trabajo es aceptable",
+            "hay cosas buenas y malas",
+            "mi experiencia es promedio",
+            "algunas tareas son interesantes, otras no tanto",
+            "el equipo es bueno, pero la gestion necesita mejorar",
+            "estoy aprendiendo cosas nuevas, pero hay desafios",
+            "a veces me siento motivado, a veces no",
+            "el ambiente es regular, podria mejorar",
+            "siento que mi esfuerzo no siempre se reconoce",
+            "tengo oportunidades limitadas para crecer",
+            "hay tareas repetitivas que no disfruto",
+            "el equilibrio entre trabajo y vida es justo",
+            "me esfuerzo por mejorar en mi puesto",
+            "siento que algunos procesos son confusos",
+            "aprecio el apoyo de mis colegas pero no siempre de mi jefe",
+            "el trabajo cumple con lo esperado",
+            "no es el mejor trabajo, pero tampoco el peor",
+            "hay estabilidad pero falta innovacion",
+            "la empresa tiene potencial de mejora",
+            "cumplo mis funciones sin mayor inconveniente"
         ]
 
     comentario = random.choice(opciones)
@@ -222,7 +222,7 @@ def generar_comentario(i):
         comentario += " y me siento muy estresado por la carga laboral"
 
     if salario[i] < 1000 and np.random.rand() < 0.5:
-        comentario += " además considero que el salario es bajo"
+        comentario += " ademas considero que el salario es bajo"
 
     if promociones[i] == 0 and np.random.rand() < 0.3:
         comentario += " y siento que no hay crecimiento profesional"
@@ -244,7 +244,7 @@ df = pd.DataFrame({
     "tipo_contrato": tipo_contrato,
     "horas_trabajo": horas_trabajo,
     "satisfaccion_laboral": satisfaccion,
-    "work_life_balance": work_life_balance,
+    "balance_trabajo_vida": work_life_balance,
     "promociones": promociones,
     "distancia_trabajo": distancia,
     "comentarios_empleado": comentarios,
