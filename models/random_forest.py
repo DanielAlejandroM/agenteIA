@@ -16,10 +16,12 @@ from models.preprocesamiento import DataPreprocessor
 class RFModelTrainer:
     def __init__(self, n_estimators=100, max_depth=None):
         self.model = RandomForestClassifier(
-            n_estimators=n_estimators, 
+            n_estimators=n_estimators,
             max_depth=max_depth,
-            random_state=42,
-            class_weight='balanced' 
+            min_samples_split=8,
+            min_samples_leaf=3,
+            max_features='sqrt',
+            random_state=42
         )
 
     def train_and_evaluate(self, X, y):
@@ -65,7 +67,7 @@ if __name__ == "__main__":
     prep.save() # Guarda preprocessor.pkl en artifacts
 
     # 3. Entrenamiento de Random Forest
-    rf_agent = RFModelTrainer(n_estimators=150, max_depth=12)
+    rf_agent = RFModelTrainer(n_estimators=400, max_depth=5)
     accuracy, reporte = rf_agent.train_and_evaluate(X_scaled, y)
 
     print(f"--- ENTRENAMIENTO EXITOSO ---")
