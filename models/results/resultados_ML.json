@@ -1,0 +1,62 @@
+[
+    {
+        "fecha_evaluacion": "2026-04-11 09:07:13",
+        "riesgo_ml": 0.4913,
+        "comentarios_empleado": "siento que mi esfuerzo no se reconoce y me siento muy estresado por la carga laboral",
+        "contexto": "Departamento: ventas | Antigüedad: 19 años"
+    },
+    {
+        "fecha_evaluacion": "2026-04-11 09:07:13",
+        "riesgo_ml": 0.5292,
+        "comentarios_empleado": "estoy muy insatisfecho con mi trabajo y me siento muy estresado por la carga laboral",
+        "contexto": "Departamento: ventas | Antigüedad: 14 años"
+    },
+    {
+        "fecha_evaluacion": "2026-04-11 09:07:13",
+        "riesgo_ml": 0.5596,
+        "comentarios_empleado": "siento que mi esfuerzo no siempre se reconoce y me siento muy estresado por la carga laboral",
+        "contexto": "Departamento: ti | Antigüedad: 6 años"
+    },
+    {
+        "fecha_evaluacion": "2026-04-11 09:07:13",
+        "riesgo_ml": 0.3917,
+        "comentarios_empleado": "siento que mis habilidades no se aprovechan y me siento muy estresado por la carga laboral",
+        "contexto": "Departamento: ventas | Antigüedad: 7 años"
+    },
+    {
+        "fecha_evaluacion": "2026-04-11 09:07:13",
+        "riesgo_ml": 0.7269,
+        "comentarios_empleado": "siento que mis habilidades no se aprovechan y siento que no hay crecimiento profesional",
+        "contexto": "Departamento: produccion | Antigüedad: 2 años"
+    },
+    {
+        "fecha_evaluacion": "2026-04-11 09:07:13",
+        "riesgo_ml": 0.5194,
+        "comentarios_empleado": "mi equipo y mi jefe me apoyan mucho",
+        "contexto": "Departamento: logistica | Antigüedad: 2 años"
+    },
+    {
+        "fecha_evaluacion": "2026-04-11 09:07:13",
+        "riesgo_ml": 0.3381,
+        "comentarios_empleado": "disfruto trabajar en esta empresa",
+        "contexto": "Departamento: ventas | Antigüedad: 13 años"
+    },
+    {
+        "fecha_evaluacion": "2026-04-11 09:07:13",
+        "riesgo_ml": 0.3984,
+        "comentarios_empleado": "la empresa valora a sus empleados y siento que no hay crecimiento profesional",
+        "contexto": "Departamento: ti | Antigüedad: 0 años"
+    },
+    {
+        "fecha_evaluacion": "2026-04-11 09:07:13",
+        "riesgo_ml": 0.4254,
+        "comentarios_empleado": "mi experiencia es promedio",
+        "contexto": "Departamento: produccion | Antigüedad: 3 años"
+    },
+    {
+        "fecha_evaluacion": "2026-04-11 09:07:13",
+        "riesgo_ml": 0.5047,
+        "comentarios_empleado": "estoy satisfecho con las condiciones laborales y siento que no hay crecimiento profesional",
+        "contexto": "Departamento: rrhh | Antigüedad: 1 años"
+    }
+]
