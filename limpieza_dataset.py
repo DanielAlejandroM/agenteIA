@@ -1,6 +1,7 @@
 import pandas as pd
 import unicodedata
 import re
+import os
 
 # -------------------------------
 # FUNCIÓN PARA LIMPIAR TEXTO
@@ -25,8 +26,8 @@ def limpiar_texto(texto):
 # -------------------------------
 # 1. Cargar dataset (buffer reader)
 # -------------------------------
-with open("empleados.csv", "r", encoding="utf-8") as f:
-    df = pd.read_csv(f)
+ruta = os.path.join(os.path.dirname(__file__), "data", "empleados.csv")
+df = pd.read_csv(ruta, encoding="utf-8")
 
 # -------------------------------
 # 2. LIMPIEZA ORIGINAL
