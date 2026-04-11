@@ -21,8 +21,14 @@ class XGBModelTrainer:
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             max_depth=max_depth,
+            subsample=0.8,
+            colsample_bytree=0.8,
+            min_child_weight=3,
+            gamma=0.1,
+            reg_alpha=0.5,
+            reg_lambda=1,
             random_state=42,
-            eval_metric='logloss',
+            eval_metric='logloss'
         )
 
     def train_and_evaluate(self, X, y):
@@ -58,7 +64,7 @@ class XGBModelTrainer:
                     yticklabels=['No Renuncia', 'Renuncia'])
         plt.title(f'XGBoost: Matriz de Confusión\nAccuracy: {acc:.2f}')
         plt.ylabel('Realidad')
-        plt.xlabel('Predicción del Agente')
+        plt.xlabel('Predicción')
         plt.tight_layout()
         plt.savefig('models/plots/confusion_xgb.png')
         plt.close()
@@ -74,7 +80,7 @@ if __name__ == "__main__":
     prep.save() # Guarda preprocessor.pkl en artifacts
 
     # 3. Entrenamiento de XGBoost
-    xgb_agent = XGBModelTrainer(n_estimators=200, learning_rate=0.05)
+    xgb_agent = XGBModelTrainer(n_estimators=300, learning_rate=0.01,  max_depth=4)
     accuracy, reporte = xgb_agent.train_and_evaluate(X_scaled, y)
 
     print(f"--- ENTRENAMIENTO XGBOOST EXITOSO ---")
