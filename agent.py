@@ -2,7 +2,7 @@ import os
 import json
 import joblib
 from db_service import PredictionRepository
-from llm_service import OpenAIRecommendationService
+from llm_service import ClaudeRecommendationService
 from models.preprocesamiento import DataPreprocessor
 import pandas as pd
 
@@ -14,7 +14,7 @@ class IAAgent:
         self.model = joblib.load(model_path)
         self.preprocessor = self.load_preprocessor(preprocessor_path, reference_data_path)
         self.repo = PredictionRepository()
-        self.llm = OpenAIRecommendationService()
+        self.llm = ClaudeRecommendationService()
 
     def load_model(self):
         return self.model
