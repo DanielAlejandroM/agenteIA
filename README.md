@@ -28,7 +28,7 @@ El agente implementa los 5 componentes de un sistema Agentic AI:
 |---|---|
 | **Percepción** | Lee y limpia `empleados.csv` (11 features validadas) |
 | **Razonamiento** | Modelo ML: Logistic Regression / Random Forest / XGBoost |
-| **Acción** | Recomendaciones via API IA + reporte CSV automático para RRHH |
+| **Acción** | Recomendaciones via API de Claude (Anthropic) + reporte CSV automático para RRHH |
 | **Memoria** | Historial persistente en SQLite (`database.db`) |
 | **Interfaz** | Dashboard web interactivo con Streamlit |
 
@@ -59,7 +59,7 @@ project/
 
 - Python **3.10** o superior
 - `pip` actualizado
-- Clave de API de **OpenAI** o **Google Gemini** (para recomendaciones automáticas)
+- Clave de API de **Anthropic (Claude)** — para las recomendaciones automáticas. Obtenerla en [console.anthropic.com](https://console.anthropic.com)
 - Git (opcional, para clonar el repositorio)
 
 ---
@@ -266,22 +266,65 @@ El proyecto incluye un dataset sintético de **10,000 registros** con las siguie
 
 ---
 
-## Dependencias Principales
+## Dependencias
 
-```
-streamlit
-pandas
-numpy
-scikit-learn
-xgboost
-joblib
-openai          # o google-generativeai según tu API
-python-dotenv
-matplotlib
-jupyter
-```
+Listado completo del archivo `requirements.txt` con versiones exactas:
 
-> El archivo `requirements.txt` incluye todas las versiones exactas.
+### Interfaz y Visualización
+
+| Paquete | Versión | Uso |
+|---|---|---|
+| `streamlit` | 1.56.0 | Dashboard web interactivo |
+| `altair` | 6.0.0 | Gráficos declarativos en Streamlit |
+| `matplotlib` | 3.10.8 | Gráficas estáticas |
+| `seaborn` | 0.13.2 | Visualización estadística |
+| `pydeck` | 0.9.1 | Mapas y visualizaciones geoespaciales |
+| `pillow` | 12.2.0 | Procesamiento de imágenes |
+
+### Machine Learning y Datos
+
+| Paquete | Versión | Uso |
+|---|---|---|
+| `scikit-learn` | 1.8.0 | Logistic Regression, Random Forest, preprocesamiento |
+| `pandas` | 3.0.2 | Manipulación y análisis de datos |
+| `numpy` | 2.4.4 | Operaciones numéricas |
+| `scipy` | 1.17.1 | Funciones científicas y estadísticas |
+| `joblib` | 1.5.3 | Serialización del modelo `.pkl` |
+| `pyarrow` | 23.0.1 | Lectura eficiente de datos tabulares |
+| `narwhals` | 2.19.0 | Compatibilidad entre dataframes |
+
+### IA Generativa y HTTP
+
+| Paquete | Versión | Uso |
+|---|---|---|
+| `anthropic` | 0.94.0 | Cliente para API de Claude (opcional) |
+| `httpx` | 0.28.1 | Cliente HTTP para llamadas a APIs externas |
+| `httpcore` | 1.0.9 | Transporte HTTP de bajo nivel |
+| `requests` | 2.33.1 | Solicitudes HTTP generales |
+| `tenacity` | 9.1.4 | Reintentos automáticos en llamadas a API |
+
+### Configuración y Utilidades
+
+| Paquete | Versión | Uso |
+|---|---|---|
+| `python-dotenv` | 1.2.2 | Carga de variables de entorno desde `.env` |
+| `pydantic` | 2.12.5 | Validación de datos y esquemas |
+| `python-dateutil` | 2.9.0 | Manejo avanzado de fechas |
+| `toml` | 0.10.2 | Lectura de archivos de configuración |
+| `click` | 8.3.2 | Interfaz de línea de comandos |
+| `GitPython` | 3.1.46 | Interacción con repositorios Git |
+| `watchdog` | 6.0.0 | Hot-reload de Streamlit en desarrollo |
+
+### Tipado y Validación
+
+| Paquete | Versión | Uso |
+|---|---|---|
+| `typing_extensions` | 4.15.0 | Tipos adicionales para Python 3.10+ |
+| `annotated-types` | 0.7.0 | Soporte de tipos anotados |
+| `pydantic_core` | 2.41.5 | Motor de validación de Pydantic |
+| `jsonschema` | 4.26.0 | Validación de esquemas JSON |
+
+> Para instalar todas las dependencias de una vez: `pip install -r requirements.txt`
 
 ---
 
