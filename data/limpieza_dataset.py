@@ -22,7 +22,7 @@ def limpiar_texto(texto):
     return texto
 
 # Carga del dataset
-ruta = os.path.join(os.path.dirname(__file__), "data", "empleados.csv")
+ruta = os.path.join(os.path.dirname(__file__), "empleados.csv")
 df = pd.read_csv(ruta, encoding="utf-8")
 
 # Limpieza
