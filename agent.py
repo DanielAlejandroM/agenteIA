@@ -65,7 +65,7 @@ class IAAgent:
         return cleaned
 
     def classify_risk(self, risk_score):
-        if risk_score >= 0.75:
+        if risk_score >= 0.70:
             return "Alto"
         if risk_score >= 0.40:
             return "Medio"

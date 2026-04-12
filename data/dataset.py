@@ -8,39 +8,44 @@ random.seed(42)
 n = 10000
 
 
-# 1. Edad
+# Edad
 edad = np.random.randint(18, 61, n)
 
-# 2. Experiencia (dependiente de edad)
+# Experiencia (dependiente de edad)
+# REGLA: la experiencia depende de la edad del empleado.
 edad_inicio_trabajo = np.random.normal(22, 3, n).astype(int)
 edad_inicio_trabajo = np.clip(edad_inicio_trabajo, 18, 30)
 
 experiencia = edad - edad_inicio_trabajo
+
+# REGLA: la experiencia no es continua (puede haber pausas)
 pausas = np.random.binomial(1, 0.3, n) * np.random.randint(0, 5, n)
 experiencia = experiencia - pausas
 experiencia = np.clip(experiencia, 0, None)
 
-# 3. Antigüedad (no puede superar experiencia)
+# REGLA: no se puede tener mas antiguedad superar experiencia
 antiguedad = np.array([
     np.random.randint(0, exp + 1) if exp > 0 else 0
     for exp in experiencia
 ])
 
-# 4. Salario (dependiente de experiencia)
+# REGLA: a mayor experiencia -> mayor salario
 salario_base = np.random.randint(482, 2000, n)
 salario = salario_base + experiencia * np.random.randint(30, 80, n)
 salario = np.clip(salario, 482, 4000)
 
-# 5. Horas de trabajo
+# Horas de trabajo
 horas_trabajo = np.random.randint(30, 61, n)
 
-# 6. Promociones (dependiente de antigüedad)
+# REGLA: mas tiempo en la empresa -> mas oportunidades de ascenso
+# promociones
 promociones = np.array([
     np.random.randint(0, min(5, ant + 1))
     for ant in antiguedad
 ])
 
-# 7. Satisfacción (depende de condiciones laborales)
+# REGLA: satisfacción (depende de condiciones laborales)
+# satisfaccion
 satisfaccion = np.array([
     np.clip(
         np.random.randint(2, 5)
@@ -65,11 +70,14 @@ departamento = np.random.choice(departamentos, n)
 # 11. Tipo de contrato
 tipo_contrato = np.random.choice(["temporal", "fijo"], n, p=[0.3, 0.7])
 
-# 2. Función de probabilidad de renuncia
+# REGLA: La renuncia depende de múltiples factores combinados
+# Función de probabilidad de renuncia
 def calcular_prob(i):
     prob = 0.2  # base
 
-    # salario bajo + baja satisfacción
+    # Factores que aumentan la probabilidad de renuncia
+
+    # bajo salario + baja satisfacción
     if salario[i] < 1200 and satisfaccion[i] <= 2:
         prob += 0.25
 
@@ -85,11 +93,11 @@ def calcular_prob(i):
     if promociones[i] == 0:
         prob += 0.1
 
-    # alta experiencia + promociones
+    # Factores que reducen la prob renuncia: experiencia + promociones
     if experiencia[i] > 10 and promociones[i] >= 2:
         prob -= 0.15
 
-    # buen salario + alta satisfacción
+    # Factores que reducen la prob renuncia: buen salario + alta satisfacción
     if salario[i] > 2500 and satisfaccion[i] >= 4:
         prob -= 0.2
 
@@ -101,23 +109,21 @@ def calcular_prob(i):
     if tipo_contrato[i] == "temporal":
         prob += 0.05
 
-    # ruido aleatorio
-    # ruido gaussiano para evitar que el modelo aprenda reglas perfectas
+    # ruido aleatorio (gaussiano) evita que el modelo aprenda reglas perfectas
+    # REGLA: no determinista
     prob += np.random.normal(0, 0.05)
 
     # limita el ruido, probabilidades varias
     return np.clip(prob, 0, 1)
 
 
-# 3. Generar target
+# Generar target
 probs = np.array([calcular_prob(i) for i in range(n)])
 renuncia = np.random.binomial(1, probs)
 
-# Esta parte es importante para no hacer al sistema determinista
-# porque dos empleados con las mismas condiciones pueden tener distinto resultado
 
 
-# 4. Ajustar distribución (50/50)
+# Ajustar distribución (50/50)
 target_ratio = 0.50
 current_ratio = renuncia.mean()
 
@@ -134,6 +140,7 @@ elif current_ratio > target_ratio:
 def generar_comentario(i):
     prob = np.random.rand()
 
+    # REGLA: el texto depende parcialmente de la satisfacción
     # 70% sigue lógica real, 30% introduce ruido
     if prob < 0.7:
         nivel = satisfaccion[i]
@@ -234,7 +241,7 @@ comentarios = [generar_comentario(i) for i in range(n)]
 # Limitar experiencia máxima a la edad del empleado
 experiencia = np.minimum(experiencia, edad)
 
-# 6. Crear DataFrame
+# Crear DataFrame
 df = pd.DataFrame({
     "edad": edad,
     "salario": salario,
@@ -251,10 +258,10 @@ df = pd.DataFrame({
     "renuncia": renuncia
 })
 
-# 7. Guardar CSV
+# guarda CSV
 df.to_csv("empleados.csv", index=False)
 
-# 8. Resumen básico
+# resumen básico
 print(df.head())
 
 print("\nDistribución de renuncia:")
@@ -266,7 +273,7 @@ print(df.describe())
 print("\nConteo de clases:")
 print(df["renuncia"].value_counts())
 
-# Validaciones
+# validaciones
 print("\nVALIDACIONES:")
 print("Errores experiencia > edad:", (experiencia > (edad - 18)).sum())
 print("Errores antigüedad > experiencia:", (antiguedad > experiencia).sum())

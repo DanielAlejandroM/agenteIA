@@ -105,20 +105,18 @@ class PredictionRepository:
             cursor.execute(
                 """
                 INSERT INTO predictions_history (
-                    employee_id, employee_name, risk_score, risk_level,
-                    employee_comment, recommendation, prediction_date
+                    employee_id, employee_name, risk_score, risk_level, employee_comment,
+                    recommendation, prediction_date
                 ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    employee_id,
-                    employee_name,
-                    float(row.get("risk_score", 0.0)),
-                    row.get("risk_level", "N/A"),
-                    row.get("comentarios_empleado", ""),
-                    row.get("recommendation", ""),
-                    now,
-                ),
-            )
+            """, (
+                str(row.get("employee_id", "N/A")),
+                str(row.get("employee_name", "N/A")),
+                float(row.get("risk_score", 0.0)),
+                row.get("risk_level", "N/A"),
+                row.get("comentarios_empleado", ""),
+                row.get("recommendation", ""),
+                now,
+            ))
         conn.commit()
         conn.close()
 

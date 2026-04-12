@@ -2,18 +2,18 @@ import pandas as pd
 import os
 
 # cargar el dataset previamente guardado
-ruta = os.path.join(os.path.dirname(__file__), "data", "empleados.csv")
+ruta = os.path.join(os.path.dirname(__file__), "empleados.csv")
 df = pd.read_csv(ruta, encoding="utf-8")
 
 # validación del dataset
 def validar_dataset(df):
-    print("🔹 Primeras filas:")
+    print("Primeras filas:")
     print(df.head(), "\n")
-    print("🔹 Información general:")
+    print("Información general:")
     print(df.info(), "\n")
-    print("🔹 Estadísticas básicas:")
+    print("Estadísticas básicas:")
     print(df.describe(), "\n")
-    print("🔹 Distribución de renuncia:")
+    print("Distribución de renuncia:")
     print(df["renuncia"].value_counts(normalize=True), "\n")
 
     # Revisar experiencia <= edad
@@ -36,7 +36,7 @@ def validar_dataset(df):
             print(f"{col} fuera de rango")
 
     # prom. x renuncia
-    print("\n🔹 Promedios por renuncia (ver patrones):")
+    print("\nPromedios por renuncia (ver patrones):")
     print(df.groupby("renuncia")[["salario","satisfaccion_laboral","horas_trabajo","promociones"]].mean())
     print("\nChecklist completado: si todo está OK, dataset listo para ML")
 
