@@ -107,7 +107,7 @@ class PredictionRepository:
                 INSERT INTO predictions_history (
                     employee_id, employee_name, risk_score, risk_level, employee_comment,
                     recommendation, prediction_date
-                ) VALUES (?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (
                 str(row.get("employee_id", "N/A")),
                 str(row.get("employee_name", "N/A")),

@@ -34,6 +34,7 @@ class IAAgent:
             "balance_trabajo_vida",
             "promociones",
             "distancia_trabajo",
+            "comentarios_empleado",
         ]
 
     def load_model(self):
@@ -49,30 +50,19 @@ class IAAgent:
             return fallback
 
     def clean_data(self, df):
-        df = df.copy()
-        df.columns = [c.strip() for c in df.columns]
-        for col in df.columns:
-            if df[col].dtype == "object":
-                df[col] = df[col].fillna("unknown")
-            else:
-                df[col] = df[col].fillna(df[col].median())
-        if "employee_id" not in df.columns:
-            df["employee_id"] = [f"EMP{idx + 1:04d}" for idx in range(len(df))]
-        return df
+        cleaned = df.copy()
+        cleaned.columns = [col.strip().lower() for col in cleaned.columns]
 
-    def predict_employee(self, df):
-        df = self.clean_data(df)
-        x_scaled, _, _ = self.preprocessor.prepare_data(df, training=False)
-        results = df.copy()
-        results["risk_score"] = self.model.predict_proba(x_scaled)[:, 1]
-        results["risk_level"] = results["risk_score"].apply(self.classify_risk)
-        results["recommendation"] = results.apply(
-            lambda row: self.generate_recommendation(row.to_dict()), axis=1
-        )
-        return results
+        for col in cleaned.columns:
+            if is_numeric_dtype(cleaned[col]):
+                cleaned[col] = cleaned[col].fillna(cleaned[col].median())
+            else:
+                cleaned[col] = cleaned[col].fillna("unknown")
+
+        return cleaned
 
     def classify_risk(self, risk_score):
-        if risk_score >= 0.75:
+        if risk_score >= 0.70:
             return "Alto"
         if risk_score >= 0.40:
             return "Medio"
