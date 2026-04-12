@@ -85,3 +85,36 @@ class IAAgent:
         with open(output_json, "w", encoding="utf-8") as f:
             json.dump(enriched, f, indent=4, ensure_ascii=False)
         return enriched
+
+    def analyze_employee_json(self, employee_json: dict):
+        original_df = pd.DataFrame([employee_json])
+        clean_df = self.clean_data(original_df)
+
+        missing = [c for c in self.expected_features if c not in clean_df.columns]
+        if missing:
+            raise ValueError(f"Faltan columnas requeridas: {missing}")
+
+        x_data = clean_df[self.expected_features]
+        probability = float(self.model.predict_proba(x_data)[0][1])
+        risk_level = self.classify_risk(probability)
+
+        result = employee_json.copy()
+        result["employee_id"] = str(employee_json.get("employee_id", "single_employee"))
+        result["risk_score"] = round(probability, 4)
+        result["risk_level"] = risk_level
+
+        if risk_level == "Alto":
+            recommendation = self.llm.generate_recommendation(
+                employee_data=result,
+                risk_score=probability,
+                risk_level=risk_level
+            )
+        else:
+            recommendation = self.generate_recommendation(risk_level)
+
+        result["recommendation"] = recommendation
+
+        result_df = pd.DataFrame([result])
+        self.save_prediction_sqlite(result_df)
+
+        return result
