@@ -1,20 +1,40 @@
 import os
-import json
 import joblib
+import pandas as pd
+from pandas.core.dtypes.common import is_numeric_dtype
+
 from db_service import PredictionRepository
 from llm_service import ClaudeRecommendationService
 from models.preprocesamiento import DataPreprocessor
-import pandas as pd
 
 
 class IAAgent:
-    def __init__(self, model_path="models/artifacts/random_forest.pkl",
-                 preprocessor_path="models/artifacts/preprocesador.pkl",
-                 reference_data_path="data/empleados.csv"):
+    def __init__(
+        self,
+        model_path="models/artifacts/random_forest.pkl",
+        preprocessor_path="models/artifacts/preprocesador.pkl",
+        reference_data_path="data/empleados.csv",
+        db_path="data/predictions_history.db",
+    ):
         self.model = joblib.load(model_path)
         self.preprocessor = self.load_preprocessor(preprocessor_path, reference_data_path)
-        self.repo = PredictionRepository()
+        self.repo = PredictionRepository(db_path)
         self.llm = ClaudeRecommendationService()
+        self.expected_features = [
+            "id_empleados",
+            "employee_name",
+            "edad",
+            "salario",
+            "experiencia",
+            "antiguedad_empresa",
+            "departamento",
+            "tipo_contrato",
+            "horas_trabajo",
+            "satisfaccion_laboral",
+            "balance_trabajo_vida",
+            "promociones",
+            "distancia_trabajo",
+        ]
 
     def load_model(self):
         return self.model
@@ -29,27 +49,16 @@ class IAAgent:
             return fallback
 
     def clean_data(self, df):
-        df = df.copy()
-        df.columns = [c.strip() for c in df.columns]
-        for col in df.columns:
-            if df[col].dtype == "object":
-                df[col] = df[col].fillna("unknown")
-            else:
-                df[col] = df[col].fillna(df[col].median())
-        if "employee_id" not in df.columns:
-            df["employee_id"] = [f"EMP{idx + 1:04d}" for idx in range(len(df))]
-        return df
+        cleaned = df.copy()
+        cleaned.columns = [col.strip().lower() for col in cleaned.columns]
 
-    def predict_employee(self, df):
-        df = self.clean_data(df)
-        x_scaled, _, _ = self.preprocessor.prepare_data(df, training=False)
-        results = df.copy()
-        results["risk_score"] = self.model.predict_proba(x_scaled)[:, 1]
-        results["risk_level"] = results["risk_score"].apply(self.classify_risk)
-        results["recommendation"] = results.apply(
-            lambda row: self.generate_recommendation(row.to_dict()), axis=1
-        )
-        return results
+        for col in cleaned.columns:
+            if is_numeric_dtype(cleaned[col]):
+                cleaned[col] = cleaned[col].fillna(cleaned[col].median())
+            else:
+                cleaned[col] = cleaned[col].fillna("unknown")
+
+        return cleaned
 
     def classify_risk(self, risk_score):
         if risk_score >= 0.75:
@@ -58,33 +67,35 @@ class IAAgent:
             return "Medio"
         return "Bajo"
 
+    def generate_basic_recommendation(self, risk_level):
+        base = {
+            "Alto": "1. Reunión inmediata con RRHH\n2. Revisar salario y clima laboral",
+            "Medio": "1. Seguimiento con liderazgo\n2. Revisar satisfacción laboral",
+            "Bajo": "1. Mantener monitoreo\n2. Reforzar motivación y reconocimiento",
+        }
+        return base.get(risk_level, "Sin recomendación disponible.")
+
     def generate_recommendation(self, employee_payload):
-        return self.llm.generate_recommendation(employee_payload)
+        risk_level = employee_payload.get("risk_level", "Bajo")
+        risk_score = float(employee_payload.get("risk_score", 0.0))
+        if risk_level == "Alto":
+            return self.llm.generate_recommendation(employee_payload, risk_score, risk_level)
+        return self.generate_basic_recommendation(risk_level)
 
-    def save_prediction_sqlite(self, results_df):
-        self.repo.save_predictions(results_df)
+    def predict_employee(self, df):
+        original_df = df.copy()
+        clean_df = self.clean_data(df)
+        x_scaled, _, _ = self.preprocessor.prepare_data(clean_df, training=False)
 
-    def generate_report_csv(self, results_df, output_path="reports/reporte_riesgo_empleados.csv"):
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        results_df.to_csv(output_path, index=False, encoding="utf-8")
-        return output_path
-
-    def generar_recomendaciones_y_chat(self, data_json, output_json="models/results/resultados_agente_ia.json"):
-        enriched = []
-        for item in data_json:
-            payload = {
-                "employee_id": item.get("employee_id", "N/A"),
-                "employee_name": item.get("employee_name", "N/A"),
-                "risk_score": item.get("riesgo_ml", 0),
-                "risk_level": self.classify_risk(item.get("riesgo_ml", 0)),
-                "comentarios_empleado": item.get("comentarios_empleado", ""),
-                "departamento": item.get("contexto", "N/A"),
-            }
-            payload["recommendation"] = self.generate_recommendation(payload)
-            enriched.append(payload)
-        with open(output_json, "w", encoding="utf-8") as f:
-            json.dump(enriched, f, indent=4, ensure_ascii=False)
-        return enriched
+        results = original_df.copy()
+        results["employee_id"] = results.get("ID_empleados", results.index.astype(str))
+        results["employee_name"] = results.get("Nombres", "N/A")
+        results["risk_score"] = self.model.predict_proba(x_scaled)[:, 1]
+        results["risk_level"] = results["risk_score"].apply(self.classify_risk)
+        results["recommendation"] = results.apply(
+            lambda row: self.generate_recommendation(row.to_dict()), axis=1
+        )
+        return results
 
     def analyze_employee_json(self, employee_json: dict):
         original_df = pd.DataFrame([employee_json])
@@ -94,27 +105,24 @@ class IAAgent:
         if missing:
             raise ValueError(f"Faltan columnas requeridas: {missing}")
 
-        x_data = clean_df[self.expected_features]
-        probability = float(self.model.predict_proba(x_data)[0][1])
+        x_scaled, _, _ = self.preprocessor.prepare_data(clean_df, training=False)
+        probability = float(self.model.predict_proba(x_scaled)[0][1])
         risk_level = self.classify_risk(probability)
 
         result = employee_json.copy()
-        result["employee_id"] = str(employee_json.get("employee_id", "single_employee"))
+        result["employee_id"] = str(employee_json.get("ID_empleados", "SIN_ID"))
+        result["employee_name"] = str(employee_json.get("Nombres", "SIN_NOMBRE"))
         result["risk_score"] = round(probability, 4)
         result["risk_level"] = risk_level
+        result["recommendation"] = self.generate_recommendation(result)
 
-        if risk_level == "Alto":
-            recommendation = self.llm.generate_recommendation(
-                employee_data=result,
-                risk_score=probability,
-                risk_level=risk_level
-            )
-        else:
-            recommendation = self.generate_recommendation(risk_level)
-
-        result["recommendation"] = recommendation
-
-        result_df = pd.DataFrame([result])
-        self.save_prediction_sqlite(result_df)
-
+        self.save_prediction_sqlite(pd.DataFrame([result]))
         return result
+
+    def save_prediction_sqlite(self, results_df):
+        self.repo.save_predictions(results_df)
+
+    def generate_report_csv(self, results_df, output_path="reports/reporte_riesgo_empleados.csv"):
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        results_df.to_csv(output_path, index=False, encoding="utf-8")
+        return output_path

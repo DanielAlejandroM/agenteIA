@@ -145,3 +145,6 @@ dmypy.json
 # Temporary files
 *.tmp
 *.temp
+
+# Pruebas
+test.py
