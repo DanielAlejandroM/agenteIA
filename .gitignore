@@ -154,3 +154,4 @@ test_claude.py
 # database
 predictions_history.db
 historial_consultas.db
+reporte_riesgo_alto_empleados.csv
