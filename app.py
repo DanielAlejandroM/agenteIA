@@ -3,8 +3,8 @@ import pandas as pd
 import os
 import re
 
-# IMPORTA TU BACKEND REAL
-#from process import process
+from agent import IAAgent
+
 
 
 # =====================================================
@@ -39,7 +39,8 @@ menu = st.sidebar.selectbox(
 # =====================================================
 
 required_columns = [
-    "ID_empleados",
+    "id_empleados",
+    "employee_name",
     "edad",
     "salario",
     "experiencia",
@@ -82,7 +83,7 @@ def extract_employee_id(text, df):
         for _, row in df.iterrows():
 
             if str(row["Nombres"]).lower() in text:
-                return row["ID_empleados"]
+                return row["id_empleados"]
 
     return None
 
@@ -142,13 +143,20 @@ def ejecutar_prediccion(empleado):
 
     payload = build_payload(empleado)
 
-    st.json(payload)  # DEBUG opcional
+    payload["employee_id"] = payload["id_empleados"]
 
-    # result = process(payload)
-    result = print("Simulando proceso IA..." + payload)  # REEMPLAZA CON TU BACKEND REAL
+    if "Nombres" in payload:
 
-    return result
+        payload["employee_name"] = payload["Nombres"]
 
+    agent = IAAgent()
+    result = agent.analyze_employee_json(payload)
+
+    return {
+        "probabilidad": f"{round(result['risk_score'] * 100, 2)}%",
+        "riesgo": result["risk_level"],
+        "recomendacion": result["recommendation"]
+    }
 
 # =====================================================
 # CHAT IA
@@ -193,7 +201,7 @@ if menu == "💬 Chat IA":
                 if employee_id:
 
                     empleado = df[
-                        df["ID_empleados"] == employee_id
+                        df["id_empleados"] == employee_id
                     ].iloc[0]
 
                     result = ejecutar_prediccion(
@@ -259,7 +267,7 @@ elif menu == "📊 Análisis por empleado":
             if "Nombres" in df.columns:
 
                 df["display_employee"] = (
-                    df["ID_empleados"].astype(str)
+                    df["id_empleados"].astype(str)
                     + " - "
                     + df["Nombres"].astype(str)
                 )
@@ -277,11 +285,11 @@ elif menu == "📊 Análisis por empleado":
 
                 employee_id = st.selectbox(
                     "Selecciona empleado",
-                    df["ID_empleados"]
+                    df["id_empleados"].astype(str)
                 )
 
             empleado = df[
-                df["ID_empleados"] == employee_id
+                df["id_empleados"].astype(str) == employee_id
             ].iloc[0]
 
             st.subheader("Perfil empleado")
