@@ -150,3 +150,7 @@ dmypy.json
 test.py
 test_email.py
 test_claude.py
+
+# database
+predictions_history.db
+historial_consultas.db
