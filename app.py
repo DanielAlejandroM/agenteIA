@@ -3,8 +3,7 @@ import pandas as pd
 import os
 import re
 
-# IMPORTA TU BACKEND REAL
-#from process import process
+from agent import IAAgent
 
 
 # =====================================================
