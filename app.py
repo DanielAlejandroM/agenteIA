@@ -3,6 +3,10 @@ import pandas as pd
 import os
 import re
 
+from agent import IAAgent
+
+
+
 # =====================================================
 # CONFIGURACIÓN GENERAL
 # =====================================================
@@ -12,31 +16,12 @@ st.set_page_config(
     layout="wide"
 )
 
-# =====================================================
-# HEADER PROFESIONAL (LOGO IZQUIERDA)
-# =====================================================
-# =====================================================
-#col_logo, col_title = st.columns([1,6])
-
-#with col_logo:
-#    st.image("assets/logo.png", width=90)
-
-#with col_title:
-#    st.markdown(
-#        """
-#        <h1 style="margin-bottom:0;">
-#        Agente Inteligente de Riesgo de Abandono Laboral
-#        </h1>
-#        <p style="margin-top:0; color:gray;">
-#        Sistema de apoyo a decisiones basado en IA para Recursos Humanos
-#        </p>
-#        """,
-#        unsafe_allow_html=True
-#    )
 
 # =====================================================
 # SIDEBAR MENU
 # =====================================================
+
+st.sidebar.image("assets/logo.png", width=200)
 
 menu = st.sidebar.selectbox(
     "Selecciona el modo",
@@ -48,42 +33,14 @@ menu = st.sidebar.selectbox(
     ]
 )
 
-# =====================================================
-# MOCK MODELO
-# =====================================================
-
-def fake_prediction():
-
-    return {
-        "probabilidad": "72%",
-        "riesgo": "ALTO",
-        "recomendacion": "Revisar carga laboral y salario"
-    }
-
-# =====================================================
-# MOCK HISTORIAL
-# =====================================================
-
-def fake_history():
-
-    data = {
-        "Empleado": ["EMP001", "EMP023","EMP003", "EMP013","EMP001", "EMP023","EMP001"],
-        "Riesgo": ["ALTO", "MEDIO","ALTO", "MEDIO","ALTO", "MEDIO","BAJO"],
-        "Score": ["72%", "45%", "72%", "45%", "90%", "45%","20%"],
-        "Recomendación": [
-            "Revisar carga laboral y salario", "Fomentar desarrollo profesional", "Revisar carga laboral y salario", "Fomentar desarrollo profesional", "Revisar carga laboral y salario", "Fomentar desarrollo profesional", "Mantener seguimiento y reconocimiento"
-        ],
-        "Fecha": ["2026-03-10", "2026-03-10", "2026-04-10", "2026-04-10", "2026-04-10", "2026-04-10", "2026-05-10"]
-    }
-
-    return pd.DataFrame(data)
 
 # =====================================================
 # VALIDAR DATASET
 # =====================================================
 
 required_columns = [
-    "ID_empleados",
+    "id_empleados",
+    "employee_name",
     "edad",
     "salario",
     "experiencia",
@@ -97,6 +54,7 @@ required_columns = [
     "comentarios_empleado"
 ]
 
+
 def validate_dataset(df):
 
     missing = [
@@ -106,19 +64,99 @@ def validate_dataset(df):
 
     return missing
 
+
 # =====================================================
-# EXTRAER EMPLOYEE ID DESDE TEXTO CHAT
+# EXTRAER EMPLOYEE ID DESDE CHAT
 # =====================================================
 
-def extract_employee_id(text):
+def extract_employee_id(text, df):
 
-    match = re.search(r"(EMP\d+)", text.upper())
+    text = text.lower()
+
+    match = re.search(r"(emp\d+)", text)
 
     if match:
-        return match.group(1)
+        return match.group(1).upper()
+
+    if "Nombres" in df.columns:
+
+        for _, row in df.iterrows():
+
+            if str(row["Nombres"]).lower() in text:
+                return row["id_empleados"]
 
     return None
 
+
+# =====================================================
+# CONSTRUIR PAYLOAD
+# =====================================================
+
+def build_payload(empleado):
+
+    # elimina NaN pero mantiene estructura original Excel
+
+    return empleado.dropna().to_dict()
+
+
+# =====================================================
+# MOCK HISTORIAL (temporal)
+# =====================================================
+
+def fake_history():
+
+    data = {
+        "Empleado": [
+            "EMP001","EMP023","EMP003","EMP013",
+            "EMP001","EMP023","EMP001","EMP010",
+            "EMP011","EMP012","EMP014","EMP015",
+            "EMP016","EMP017","EMP018","EMP019"
+        ],
+        "Riesgo": [
+            "ALTO","MEDIO","ALTO","MEDIO",
+            "ALTO","MEDIO","BAJO","ALTO",
+            "MEDIO","BAJO","ALTO","MEDIO",
+            "BAJO","ALTO","MEDIO","BAJO"
+        ],
+        "Score": [
+            "72%","45%","72%","45%",
+            "90%","45%","20%","81%",
+            "39%","22%","88%","47%",
+            "15%","76%","41%","19%"
+        ],
+        "Fecha": [
+            "2026-03-10","2026-03-10","2026-04-10","2026-04-10",
+            "2026-04-10","2026-04-10","2026-05-10","2026-05-12",
+            "2026-05-13","2026-05-14","2026-05-15","2026-05-16",
+            "2026-05-17","2026-05-18","2026-05-19","2026-05-20"
+        ]
+    }
+
+    return pd.DataFrame(data)
+
+
+# =====================================================
+# EJECUTAR PREDICCIÓN
+# =====================================================
+
+def ejecutar_prediccion(empleado):
+
+    payload = build_payload(empleado)
+
+    payload["employee_id"] = payload["id_empleados"]
+
+    if "Nombres" in payload:
+
+        payload["employee_name"] = payload["Nombres"]
+
+    agent = IAAgent()
+    result = agent.analyze_employee_json(payload)
+
+    return {
+        "probabilidad": f"{round(result['risk_score'] * 100, 2)}%",
+        "riesgo": result["risk_level"],
+        "recomendacion": result["recommendation"]
+    }
 
 # =====================================================
 # CHAT IA
@@ -132,8 +170,6 @@ if menu == "💬 Chat IA":
         "📄 Dataset empleados",
         type=["csv"]
     )
-
-    dataset_loaded = False
 
     if uploaded_file:
 
@@ -149,103 +185,52 @@ if menu == "💬 Chat IA":
 
         else:
 
-            dataset_loaded = True
-
             st.success("Dataset cargado correctamente")
 
-    if "messages" not in st.session_state:
+            user_input = st.chat_input(
+                "Ejemplo: analiza Maria o EMP001"
+            )
 
-        st.session_state.messages = [
-            {
-                "role": "assistant",
-                "content": """
-Hola 👋
+            if user_input:
 
-Soy tu asistente de análisis predictivo.
+                employee_id = extract_employee_id(
+                    user_input,
+                    df
+                )
 
-Puedes escribir:
+                if employee_id:
 
-➡ analiza EMP001
-➡ riesgo EMP023
-"""
-            }
-        ]
+                    empleado = df[
+                        df["id_empleados"] == employee_id
+                    ].iloc[0]
 
-    for msg in st.session_state.messages:
+                    result = ejecutar_prediccion(
+                        empleado
+                    )
 
-        with st.chat_message(msg["role"]):
+                    st.write(
+                        "Probabilidad abandono:",
+                        result["probabilidad"]
+                    )
 
-            st.markdown(msg["content"])
+                    st.write(
+                        "Nivel riesgo:",
+                        result["riesgo"]
+                    )
 
-    user_input = st.chat_input(
-        "Ejemplo: analiza EMP001"
-    )
+                    st.write(
+                        "Recomendación:"
+                    )
 
-    if user_input:
+                    st.info(
+                        result["recomendacion"]
+                    )
 
-        st.session_state.messages.append(
-            {
-                "role": "user",
-                "content": user_input
-            }
-        )
+                else:
 
-        with st.chat_message("user"):
-
-            st.markdown(user_input)
-
-        if not dataset_loaded:
-
-            respuesta = """
-⚠️ Primero debes cargar un dataset CSV para poder analizar empleados.
-"""
-
-        else:
-
-            employee_id = extract_employee_id(user_input)
-
-            if employee_id is None:
-
-                respuesta = """
-No detecté un ID válido.
-
-Ejemplo correcto:
-
-analiza EMP001
-"""
-
-            elif employee_id not in df["ID_empleados"].values:
-
-                respuesta = f"""
-El empleado **{employee_id}** no existe en el dataset cargado.
-"""
-
-            else:
-
-                result = fake_prediction()
-
-                respuesta = f"""
-🔎 Resultado del análisis para **{employee_id}**
-
-Probabilidad abandono: **{result["probabilidad"]}**
-
-Nivel riesgo: **{result["riesgo"]}**
-
-📌 Recomendación:
-
-{result["recomendacion"]}
-"""
-
-        with st.chat_message("assistant"):
-
-            st.markdown(respuesta)
-
-        st.session_state.messages.append(
-            {
-                "role": "assistant",
-                "content": respuesta
-            }
-        )
+                    st.warning(
+                        "Empleado no encontrado"
+                    )
 
 
 # =====================================================
@@ -277,47 +262,82 @@ elif menu == "📊 Análisis por empleado":
 
             st.success("Dataset válido")
 
-            employee_id = st.selectbox(
-                "Selecciona empleado",
-                df["ID_empleados"]
-            )
+            # SELECTOR INTELIGENTE ID + NOMBRE
+
+            if "Nombres" in df.columns:
+
+                df["display_employee"] = (
+                    df["id_empleados"].astype(str)
+                    + " - "
+                    + df["Nombres"].astype(str)
+                )
+
+                selected_display = st.selectbox(
+                    "Selecciona empleado",
+                    df["display_employee"]
+                )
+
+                employee_id = selected_display.split(
+                    " - "
+                )[0]
+
+            else:
+
+                employee_id = st.selectbox(
+                    "Selecciona empleado",
+                    df["id_empleados"].astype(str)
+                )
 
             empleado = df[
-                df["ID_empleados"] == employee_id
+                df["id_empleados"].astype(str) == employee_id
             ].iloc[0]
 
             st.subheader("Perfil empleado")
 
             if "Nombres" in df.columns:
 
-                st.write("👤 Nombre:", empleado["Nombres"])
-
-            else:
-
-                st.warning(
-                    "La columna 'Nombres' no está en el dataset"
+                st.write(
+                    "Nombre:",
+                    empleado["Nombres"]
                 )
 
-            st.write("🏢 Departamento:", empleado["departamento"])
+            st.write(
+                "Departamento:",
+                empleado["departamento"]
+            )
 
-            st.write("📄 Tipo contrato:", empleado["tipo_contrato"])
+            st.write(
+                "Tipo contrato:",
+                empleado["tipo_contrato"]
+            )
 
             if st.button("Ejecutar análisis"):
 
-                result = fake_prediction()
+                result = ejecutar_prediccion(
+                    empleado
+                )
 
                 st.metric(
                     "Probabilidad abandono",
                     result["probabilidad"]
                 )
 
-                st.write("Nivel riesgo:", result["riesgo"])
+                st.write(
+                    "Nivel riesgo:",
+                    result["riesgo"]
+                )
 
-                st.write("Recomendación:", result["recomendacion"])
+                st.write(
+                    "Recomendación:"
+                )
+
+                st.info(
+                    result["recomendacion"]
+                )
 
 
 # =====================================================
-# HISTORIAL
+# HISTORIAL (SIN CAMBIOS)
 # =====================================================
 
 elif menu == "📁 Historial":
@@ -326,28 +346,49 @@ elif menu == "📁 Historial":
 
     history = fake_history()
 
-    st.dataframe(history)
+    # PAGINACIÓN
+
+    rows_per_page = 10
+
+    total_rows = len(history)
+
+    total_pages = (total_rows // rows_per_page) + (
+        total_rows % rows_per_page > 0
+    )
+
+    page = st.number_input(
+        "Selecciona página",
+        min_value=1,
+        max_value=total_pages,
+        step=1
+    )
+
+    start_idx = (page - 1) * rows_per_page
+    end_idx = start_idx + rows_per_page
+
+    paginated_df = history.iloc[start_idx:end_idx]
+
+    st.dataframe(paginated_df, use_container_width=True)
+
+    st.caption(
+        f"Mostrando página {page} de {total_pages}"
+    )
+
 
     # =====================================================
-    # TRAZABILIDAD DEL SCORE POR EMPLEADO
+    # TRAZABILIDAD SCORE
     # =====================================================
 
     st.subheader("Trazabilidad del score por empleado")
 
-    # selector empleado
-
     selected_employee = st.selectbox(
-        "Selecciona empleado para visualizar evolución",
+        "Selecciona empleado",
         history["Empleado"].unique()
     )
-
-    # filtrar empleado seleccionado
 
     employee_history = history[
         history["Empleado"] == selected_employee
     ].copy()
-
-    # convertir Score de texto "72%" a número 72
 
     employee_history["Score"] = (
         employee_history["Score"]
@@ -355,27 +396,33 @@ elif menu == "📁 Historial":
         .astype(int)
     )
 
-    # convertir fecha a formato datetime
-
     employee_history["Fecha"] = pd.to_datetime(
         employee_history["Fecha"]
     )
 
-    # ordenar cronológicamente
-
     employee_history = employee_history.sort_values(
         "Fecha"
     )
-
-    # graficar evolución
 
     st.line_chart(
         employee_history.set_index("Fecha")["Score"]
     )
 
 
+    # =====================================================
+    # FRECUENCIA RIESGO
+    # =====================================================
+
+    st.subheader("Frecuencia niveles riesgo")
+
+    riesgo_counts = history["Riesgo"].value_counts()
+
+    st.bar_chart(riesgo_counts)
+
+
+
 # =====================================================
-# REPORTE SIDEBAR
+# SIDEBAR REPORTE
 # =====================================================
 
 st.sidebar.divider()
