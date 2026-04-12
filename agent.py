@@ -20,6 +20,21 @@ class IAAgent:
         self.preprocessor = self.load_preprocessor(preprocessor_path, reference_data_path)
         self.repo = PredictionRepository(db_path)
         self.llm = ClaudeRecommendationService()
+        self.expected_features = [
+            "id_empleados",
+            "employee_name",
+            "edad",
+            "salario",
+            "experiencia",
+            "antiguedad_empresa",
+            "departamento",
+            "tipo_contrato",
+            "horas_trabajo",
+            "satisfaccion_laboral",
+            "balance_trabajo_vida",
+            "promociones",
+            "distancia_trabajo",
+        ]
 
     def load_model(self):
         return self.model
