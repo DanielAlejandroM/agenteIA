@@ -17,6 +17,7 @@ class PredictionRepository:
             CREATE TABLE IF NOT EXISTS predictions_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 employee_id TEXT,
+                employee_name TEXT,
                 risk_score REAL,
                 risk_level TEXT,
                 employee_comment TEXT,
@@ -34,11 +35,12 @@ class PredictionRepository:
         for _, row in results_df.iterrows():
             cursor.execute("""
                 INSERT INTO predictions_history (
-                    employee_id, risk_score, risk_level, employee_comment,
+                    employee_id, employee_name, risk_score, risk_level, employee_comment,
                     recommendation, prediction_date
                 ) VALUES (?, ?, ?, ?, ?, ?)
             """, (
                 str(row.get("employee_id", "N/A")),
+                str(row.get("employee_name", "N/A")),
                 float(row.get("risk_score", 0.0)),
                 row.get("risk_level", "N/A"),
                 row.get("comentarios_empleado", ""),

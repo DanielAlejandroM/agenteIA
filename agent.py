@@ -74,6 +74,7 @@ class IAAgent:
         for item in data_json:
             payload = {
                 "employee_id": item.get("employee_id", "N/A"),
+                "employee_name": item.get("employee_name", "N/A"),
                 "risk_score": item.get("riesgo_ml", 0),
                 "risk_level": self.classify_risk(item.get("riesgo_ml", 0)),
                 "comentarios_empleado": item.get("comentarios_empleado", ""),
