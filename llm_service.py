@@ -38,7 +38,8 @@ Datos del empleado:
 {empleado_json}
 
 Reglas:
-- Máximo 3 recomendaciones
+- Máximo 2 recomendaciones
+- Y que cada recpmendacion sea de 1 sola linea
 - Concretas y accionables
 - Responde en español
 - No expliques, solo da recomendaciones
