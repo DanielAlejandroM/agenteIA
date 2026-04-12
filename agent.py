@@ -34,6 +34,7 @@ class IAAgent:
             "balance_trabajo_vida",
             "promociones",
             "distancia_trabajo",
+            ""
         ]
 
     def load_model(self):

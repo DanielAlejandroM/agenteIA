@@ -91,7 +91,7 @@ required_columns = [
     "tipo_contrato",
     "horas_trabajo",
     "satisfaccion_laboral",
-    "work_life_balance",
+    "balance_trabajo_vida",
     "promociones",
     "distancia_trabajo",
     "comentarios_empleado"
