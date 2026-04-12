@@ -148,3 +148,5 @@ dmypy.json
 
 # Pruebas
 test.py
+test_email.py
+test_claude.py

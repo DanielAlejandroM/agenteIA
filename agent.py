@@ -6,6 +6,7 @@ from pandas.core.dtypes.common import is_numeric_dtype
 from db_service import PredictionRepository
 from llm_service import ClaudeRecommendationService
 from models.preprocesamiento import DataPreprocessor
+from email_service import EmailService
 
 
 class IAAgent:
@@ -15,7 +16,9 @@ class IAAgent:
         preprocessor_path="models/artifacts/preprocesador.pkl",
         reference_data_path="data/empleados.csv",
         db_path="data/predictions_history.db",
+
     ):
+        self.email_service = EmailService()
         self.model = joblib.load(model_path)
         self.preprocessor = self.load_preprocessor(preprocessor_path, reference_data_path)
         self.repo = PredictionRepository(db_path)
@@ -83,6 +86,24 @@ class IAAgent:
             return self.llm.generate_recommendation(employee_payload, risk_score, risk_level)
         return self.generate_basic_recommendation(risk_level)
 
+    def notify_hr_if_high_risk(self, result: dict):
+        if result.get("risk_level") != "Alto":
+            return False
+
+        email_content = self.llm.generate_hr_email(
+            employee_data=result,
+            risk_score=result["risk_score"],
+            risk_level=result["risk_level"]
+        )
+
+        self.email_service.send_email(
+            subject=email_content["subject"],
+            body=email_content["body"]
+        )
+
+        return True
+
+
     def predict_employee(self, df):
         original_df = df.copy()
         clean_df = self.clean_data(df)
@@ -90,7 +111,7 @@ class IAAgent:
 
         results = original_df.copy()
         results["employee_id"] = results.get("ID_empleados", results.index.astype(str))
-        results["employee_name"] = results.get("Nombres", "N/A")
+        results["employee_name"] = results.get("employee_name", "N/A")
         results["risk_score"] = self.model.predict_proba(x_scaled)[:, 1]
         results["risk_level"] = results["risk_score"].apply(self.classify_risk)
         results["recommendation"] = results.apply(
@@ -111,13 +132,20 @@ class IAAgent:
         risk_level = self.classify_risk(probability)
 
         result = employee_json.copy()
-        result["employee_id"] = str(employee_json.get("ID_empleados", "SIN_ID"))
-        result["employee_name"] = str(employee_json.get("Nombres", "SIN_NOMBRE"))
+        result["employee_id"] = str(employee_json.get("id_empleados", "SIN_ID"))
+        result["employee_name"] = str(employee_json.get("employee_name", "SIN_NOMBRE"))
         result["risk_score"] = round(probability, 4)
         result["risk_level"] = risk_level
         result["recommendation"] = self.generate_recommendation(result)
 
         self.save_prediction_sqlite(pd.DataFrame([result]))
+
+        if result["risk_level"] == "Alto":
+            try:
+                self.notify_hr_if_high_risk(result)
+            except Exception as e:
+                print(f"Error enviando correo a RRHH: {e}")
+
         return result
 
     def save_prediction_sqlite(self, results_df):
