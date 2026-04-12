@@ -1,21 +1,20 @@
 import os
-import anthropic
+
+try:
+    import anthropic
+except Exception:
+    anthropic = None
 
 
 class ClaudeRecommendationService:
     def __init__(self):
         api_key = os.getenv("ANTHROPIC_API_KEY")
-        self.client = anthropic.Anthropic(api_key=api_key) if api_key else None
+        self.client = anthropic.Anthropic(api_key=api_key) if (anthropic and api_key) else None
 
     def generate_recommendation(self, employee_data, risk_score, risk_level):
-        """
-        Genera recomendaciones usando Claude.
-        """
-
         if not self.client:
             return self._fallback_recommendation(risk_level)
 
-        # Construir JSON del empleado (más limpio para el prompt)
         empleado_json = {
             "edad": employee_data.get("edad"),
             "salario": employee_data.get("salario"),
@@ -23,7 +22,7 @@ class ClaudeRecommendationService:
             "departamento": employee_data.get("departamento"),
             "tipo_contrato": employee_data.get("tipo_contrato"),
             "satisfaccion_laboral": employee_data.get("satisfaccion_laboral"),
-            "work_life_balance": employee_data.get("work_life_balance"),
+            "balance_trabajo_vida": employee_data.get("work_life_balance"),
             "risk_score": round(float(risk_score), 2),
             "risk_level": risk_level,
             "comentarios_empleado": employee_data.get("comentarios_empleado", "")
@@ -39,7 +38,7 @@ Datos del empleado:
 
 Reglas:
 - Máximo 2 recomendaciones
-- Y que cada recpmendacion sea de 1 sola linea
+- Y que cada recomendación sea de 1 sola línea
 - Concretas y accionables
 - Responde en español
 - No expliques, solo da recomendaciones
@@ -49,13 +48,9 @@ Reglas:
             response = self.client.messages.create(
                 model="claude-sonnet-4-6",
                 max_tokens=500,
-                messages=[
-                    {"role": "user", "content": mensaje}
-                ]
+                messages=[{"role": "user", "content": mensaje}],
             )
-
             return response.content[0].text.strip()
-
         except Exception:
             return self._fallback_recommendation(risk_level)
 
