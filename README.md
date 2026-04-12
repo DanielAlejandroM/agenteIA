@@ -327,7 +327,15 @@ Listado completo del archivo `requirements.txt` con versiones exactas:
 > Para instalar todas las dependencias de una vez: `pip install -r requirements.txt`
 
 ---
+## Implementación
 
+Para la implementación  de este Agente se utilizó Python 3.11 y se requiere colocar un API_KEY de Claude en un archivo 
+.env el formato de este archivo es el que se muestra a continuación.
+
+ANTHROPIC_API_KEY=COLOCAR_API_KEY_AQUI
+
+
+---
 ## Equipo
 
 | Rol | Responsabilidad |
