@@ -20,22 +20,6 @@ class IAAgent:
         self.preprocessor = self.load_preprocessor(preprocessor_path, reference_data_path)
         self.repo = PredictionRepository(db_path)
         self.llm = ClaudeRecommendationService()
-        self.expected_features = [
-            "id_empleados",
-            "employee_name",
-            "edad",
-            "salario",
-            "experiencia",
-            "antiguedad_empresa",
-            "departamento",
-            "tipo_contrato",
-            "horas_trabajo",
-            "satisfaccion_laboral",
-            "balance_trabajo_vida",
-            "promociones",
-            "distancia_trabajo",
-            "comentarios_empleado",
-        ]
 
     def load_model(self):
         return self.model
@@ -50,16 +34,27 @@ class IAAgent:
             return fallback
 
     def clean_data(self, df):
-        cleaned = df.copy()
-        cleaned.columns = [col.strip().lower() for col in cleaned.columns]
-
-        for col in cleaned.columns:
-            if is_numeric_dtype(cleaned[col]):
-                cleaned[col] = cleaned[col].fillna(cleaned[col].median())
+        df = df.copy()
+        df.columns = [c.strip() for c in df.columns]
+        for col in df.columns:
+            if df[col].dtype == "object":
+                df[col] = df[col].fillna("unknown")
             else:
-                cleaned[col] = cleaned[col].fillna("unknown")
+                df[col] = df[col].fillna(df[col].median())
+        if "employee_id" not in df.columns:
+            df["employee_id"] = [f"EMP{idx + 1:04d}" for idx in range(len(df))]
+        return df
 
-        return cleaned
+    def predict_employee(self, df):
+        df = self.clean_data(df)
+        x_scaled, _, _ = self.preprocessor.prepare_data(df, training=False)
+        results = df.copy()
+        results["risk_score"] = self.model.predict_proba(x_scaled)[:, 1]
+        results["risk_level"] = results["risk_score"].apply(self.classify_risk)
+        results["recommendation"] = results.apply(
+            lambda row: self.generate_recommendation(row.to_dict()), axis=1
+        )
+        return results
 
     def classify_risk(self, risk_score):
         if risk_score >= 0.75:
