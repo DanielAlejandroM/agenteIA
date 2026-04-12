@@ -21,6 +21,8 @@ class IAAgent:
         self.repo = PredictionRepository(db_path)
         self.llm = ClaudeRecommendationService()
         self.expected_features = [
+            "id_empleados",
+            "employee_name",
             "edad",
             "salario",
             "experiencia",
@@ -29,7 +31,7 @@ class IAAgent:
             "tipo_contrato",
             "horas_trabajo",
             "satisfaccion_laboral",
-            "work_life_balance",
+            "balance_trabajo_vida",
             "promociones",
             "distancia_trabajo",
         ]
