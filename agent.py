@@ -15,7 +15,7 @@ class IAAgent:
         self.preprocessor = self.load_preprocessor(preprocessor_path, reference_data_path)
         self.repo = PredictionRepository()
         self.llm = ClaudeRecommendationService()
-
+        
     def load_model(self):
         return self.model
 
@@ -29,16 +29,18 @@ class IAAgent:
             return fallback
 
     def clean_data(self, df):
-        df = df.copy()
-        df.columns = [c.strip() for c in df.columns]
-        for col in df.columns:
-            if df[col].dtype == "object":
-                df[col] = df[col].fillna("unknown")
-            else:
-                df[col] = df[col].fillna(df[col].median())
-        if "employee_id" not in df.columns:
-            df["employee_id"] = [f"EMP{idx + 1:04d}" for idx in range(len(df))]
-        return df
+            df = df.copy()
+            df.columns = [c.strip() for c in df.columns]
+            for col in df.columns:
+                if pd.api.types.is_numeric_dtype(df[col]):
+                    df[col] = df[col].fillna(df[col].median())
+                else:
+                    df[col] = df[col].fillna("unknown")
+            if "employee_id" not in df.columns:
+                df["employee_id"] = [
+                    f"EMP{idx + 1:04d}" for idx in range(len(df))
+                ]
+            return df
 
     def predict_employee(self, df):
         df = self.clean_data(df)
